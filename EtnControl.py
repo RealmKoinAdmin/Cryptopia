@@ -13,12 +13,12 @@ print('''
 #                            \/     \/                                          #
 #                                       v0.3.2                                  #
 # C.T.S:                                                                        #
-# Public Cryptopia Trading System                                              #
+# Public Cryptopia Trading System                                               #
 # Unlicenced, Public Domain                                                     # 
 #                                                                               #         
 #USE AT OWN RISK!                                                               #
 #################################################################################
-|[Vivian]| >>: Welcome To Vivians Central Server Monitoring System.''')
+|[VIVIAN]| >>: Welcome To Vivians Central Cryptopia Monitoring System.''')
 print('|[VIVIAN]|>>: Welcome To Cryptopia ETN/BTC Trader! Written By Skrypt Please Feel Free To Donate In BTC!')
 print('|[VIVIAN]|>>: Skrypt [BTC] Donation Address: [1KwnTGnuhBQHFkxTnaYiPt7RyJYJGzDcWn]')
 
@@ -26,13 +26,14 @@ print('|[VIVIAN]|>>: Skrypt [BTC] Donation Address: [1KwnTGnuhBQHFkxTnaYiPt7RyJY
 def set_trade_amount():
  global ETN
  global Etn_Set
- balance_etn = client.get_balance('ETN')
- balance_btc = client.get_balance('BTC')
+ balance_etn,error = client.get_balance('ETN')
+ balance_btc,error = client.get_balance('BTC')
  tick = client.get_market('ETN_BTC')
- Sell = tick['AskPrice']
+ Sell = tick[0]['AskPrice']
  print('|[CRYPTOPIA]|>>: Current ETN Balance: [{}].'.format(balance_etn['Available']))
  print('|[CRYPTOPIA]|>>: Current BTC Balance: [{}].'.format(balance_btc['Available']))
  print('|[VIVIAN]|>>: You May Trade Current BTC: [{}] For [{}] ETN At [{}] Satoshi Per ETN'.format(balance_btc['Available'],(balance_btc['Available']-balance_btc['Available']*0.00201)//Sell,Sell*1e8))
+ print('|[VIVIAN]|>>: You May Trade Current ETN: [{}] For [{}] BTC At [{}] Satoshi Per ETN'.format(balance_etn['Available'],(balance_etn['Available']-balance_etn['Available']*0.00201)*Sell,Sell*1e8))
  print('|[VIVIAN]|>>: How Much ETN Are You Trading? [FLOAT/#.#]')
  ETN = input('|[INPUT]|>>: ')
  try:
@@ -61,7 +62,7 @@ def set_buy_max():
  global BUY_MAX
  global Buy_Max_Set
  tick = client.get_market('ETN_BTC')
- Sell = tick['AskPrice'] * 1e8
+ Sell = tick[0]['AskPrice'] * 1e8
  print('|[VIVIAN]|>>: Last ETN Sale Price Satoshi Per ETN [{}].'.format(Sell))
  print('|[VIVIAN]|>>: How Much Max Do You Want To Spend Per ETN In Satoshi? [FLOAT/#.#]')
  BUY_MAX = input('|[INPUT]|>>: ')
@@ -77,7 +78,7 @@ def set_sell_min():
  global SELL_MIN
  global Sell_Min_Set
  tick = client.get_market('ETN_BTC')
- Buy = tick['BidPrice'] * 1e8
+ Buy = tick[0]['BidPrice'] * 1e8
  print('|[VIVIAN]|>>: Last ETN Buy Price Satoshi Per ETN [{}].'.format(Buy))
  print('|[VIVIAN]|>>: How Much Min Do You Want To Sell Per ETN In Satoshi? [FLOAT/#.#]')
  SELL_MIN = input('|[INPUT]|>>: ')
@@ -115,21 +116,21 @@ def set_api_secret():
 
 def calc_sell():
  tick = client.get_market('ETN_BTC')
- if float(tick['AskPrice']) * 1e8 >= float(SELL_MIN):
-  return [True, tick['AskPrice'] * 1e8]
+ if float(tick[0]['AskPrice']) * 1e8 >= float(SELL_MIN):
+  return [True, tick[0]['AskPrice'] * 1e8]
  else:
-  return [False, tick['AskPrice'] * 1e8]
+  return [False, tick[0]['AskPrice'] * 1e8]
 
 def calc_buy():
  tick = client.get_market('ETN_BTC')
  orders = client.get_openorders('ETN_BTC')
- if float(tick['BidPrice']) * 1e8 <= float(BUY_MAX):
-  return [True, tick['BidPrice'] * 1e8]
+ if float(tick[0]['BidPrice']) * 1e8 <= float(BUY_MAX):
+  return [True, tick[0]['BidPrice'] * 1e8]
  else:
-  return [False, tick['BidPrice'] * 1e8]
+  return [False, tick[0]['BidPrice'] * 1e8]
 
 def get_etn_balance():
- balance = client.get_balance('ETN')
+ balance,error = client.get_balance('ETN')
  if balance['Available'] > 0.0:
   return 'Sell'
  elif balance['Available'] <= 0.0:
@@ -137,29 +138,29 @@ def get_etn_balance():
 
 def sell_etn():
  tick = client.get_market('ETN_BTC')
- balance = client.get_balance('ETN')
+ balance,error = client.get_balance('ETN')
  if float(balance['Available']) >= float(ETN):
-  print('Selling {} ETN For {} Satoshi Each'.format(ETN,tick['BidPrice']*1e8))
-  sold = client.submit_trade('ETN/BTC', 'Sell', tick['BidPrice'], ETN)
+  print('Selling {} ETN For {} Satoshi Each'.format(ETN,tick[0]['BidPrice']*1e8))
+  sold = client.submit_trade('ETN/BTC', 'Sell', tick[0]['BidPrice'], ETN)
   print(sold)
  elif float(balance['Available']) < float(ETN) and float(balance['Available']) > 0:
-  print('|[VIVIAN]|>>: Selling {} ETN For {} Satoshi Each'.format(balance['Available'],tick['BidPrice']*1e8))
-  sold = client.submit_trade('ETN/BTC', tick['BidPrice'], balance['Available'])
+  print('|[VIVIAN]|>>: Selling {} ETN For {} Satoshi Each'.format(balance['Available'],tick[0]['BidPrice']*1e8))
+  sold = client.submit_trade('ETN/BTC', tick[0]['BidPrice'], balance['Available'])
   print(sold)
  else:
   print('|[VIVIAN]|>>: Not Enough Balance For Trading Routine.')
 
 def buy_etn():
  tick = client.get_market('ETN_BTC')
- balance = client.get_balance('BTC')
- balance_etn = client.get_balance('ETN')
- if float(tick['AskPrice'])*float(ETN) <= float(balance['Available']):
-  print('|[VIVIAN]|>>: Buying {} ETN For {} Satoshi Each'.format(ETN,tick['AskPrice']*1e8))
-  bought = client.submit_trade('ETN/BTC', tick['AskPrice'], float(tick['AskPrice'])*float(ETN))
+ balance,error = client.get_balance('BTC')
+ balance_etn,error = client.get_balance('ETN')
+ if float(tick[0]['AskPrice'])*float(ETN) <= float(balance['Available']):
+  print('|[VIVIAN]|>>: Buying {} ETN For {} Satoshi Each'.format(ETN,tick[0]['AskPrice']*1e8))
+  bought = client.submit_trade('ETN/BTC', tick[0]['AskPrice'], float(tick[0]['AskPrice'])*float(ETN))
   print(bought)
- elif float(tick['AskPrice'])*(float(ETN)-float(balance_etn['Available'])) <= balance['Available']:
-  print('|[VIVIAN]|>>: Buying {} ETN For {} Satoshi Each'.format((float(ETN)-float(balance_etn['Available'])),tick['AskPrice']*1e8))
-  bought = client.submit_trade('ETN/BTC', tick['AskPrice'], float(tick['AskPrice'])*(float(ETN)-float(balance_etn['Available'])))
+ elif float(tick[0]['AskPrice'])*(float(ETN)-float(balance_etn['Available'])) <= balance['Available']:
+  print('|[VIVIAN]|>>: Buying {} ETN For {} Satoshi Each'.format((float(ETN)-float(balance_etn['Available'])),tick[0]['AskPrice']*1e8))
+  bought = client.submit_trade('ETN/BTC', tick[0]['AskPrice'], float(tick['AskPrice'])*(float(ETN)-float(balance_etn['Available'])))
   print(bought)
  else:
   print('|[VIVIAN]|>>: Not Enough Balance BTC For Trading Routine.')
