@@ -145,7 +145,7 @@ def sell_doge():
   print(sold)
  elif float(balance['Available']) < float(ETN) and float(balance['Available']) > 0:
   print('|[VIVIAN]|>>: Selling {} DOGE For {} Satoshi Each'.format(balance['Available'],tick[0]['BidPrice']*1e8))
-  sold = client.submit_trade('DOGE/BTC', tick[0]['BidPrice'], balance['Available'])
+  sold = client.submit_trade('DOGE/BTC','Sell', tick[0]['BidPrice'], balance['Available'])
   print(sold)
  else:
   print('|[VIVIAN]|>>: Not Enough Balance For Trading Routine.')
@@ -156,11 +156,11 @@ def buy_doge():
  balance_doge,error = client.get_balance('DOGE')
  if float(tick[0]['AskPrice'])*float(DOGE) <= float(balance['Available']):
   print('|[VIVIAN]|>>: Buying {} DOGE For {} Satoshi Each'.format(DOGE,tick[0]['AskPrice']*1e8))
-  bought = client.submit_trade('DOGE/BTC', tick[0]['AskPrice'], float(tick[0]['AskPrice'])*float(DOGE))
+  bought = client.submit_trade('DOGE/BTC','Buy', tick[0]['AskPrice'], float(DOGE))
   print(bought)
  elif float(tick[0]['AskPrice'])*(float(DOGE)-float(balance_doge['Available'])) <= balance['Available']:
   print('|[VIVIAN]|>>: Buying {} DOGE For {} Satoshi Each'.format((float(DOGE)-float(balance_doge['Available'])),tick[0]['AskPrice']*1e8))
-  bought = client.submit_trade('DOGE/BTC', tick[0]['AskPrice'], float(tick['AskPrice'])*(float(DOGE)-float(balance_doge['Available'])))
+  bought = client.submit_trade('DOGE/BTC','Buy', tick[0]['AskPrice'],float(DOGE)-float(balance_doge['Available']))
   print(bought)
  else:
   print('|[VIVIAN]|>>: Not Enough Balance BTC For Trading Routine.')
