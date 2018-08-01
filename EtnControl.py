@@ -170,7 +170,7 @@ def sell_ETN(Amount):
    Cryptopia['ETN Order Book'].append({'Sell': [Cryptopia['ETN Current Bid'][0], Amount]})
    print(sold)
   elif Amount > User['ETN Left To Sell']:
-   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: Selling {} ETN For {} Satoshi Each'.format(User['ETN Left To Sell'],Cryptopia['ETN Current Bid'][0]))
+   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: Selling {} ETN For {} Satoshi Each'.format(User['ETN Left To Sell'],Cryptopia['ETN Current Bid'][0]*1e8))
    sold = Cryptopia['Client'].submit_trade('ETN/BTC', 'Sell', Cryptopia['ETN Current Bid'], User['ETN Left To Sell'])
    User['ETN Left To Sell'] = 0
    User['ETN Left To Buy'] = User['ETN']['Trade Amount']
@@ -210,7 +210,7 @@ def buy_ETN(Amount):
    Cryptopia['ETN Order Book'].append({'Buy': [Cryptopia['ETN Current Ask'][0], Amount]})
    print(bought)
   elif Amount > User['ETN Left To Buy'] and Cryptopia['ETN Current Ask'][0]*User['ETN Left To Buy'] <= User['Wallets']['Bitcoin']['Balance']:
-   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: Buying {} ETN For {} Satoshi Each'.format(User['ETN Left To Buy'],Cryptopia['ETN Current Ask'][0]))
+   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: Buying {} ETN For {} Satoshi Each'.format(User['ETN Left To Buy'],Cryptopia['ETN Current Ask'][0]*1e8))
    bought = Cryptopia['Client'].submit_trade('ETN/BTC', 'Buy', Cryptopia['ETN Current Ask'], User['ETN Left To Buy'])
    User['ETN Left To Buy'] = 0
    User['ETN Left To Sell'] = User['ETN']['Trade Amount']
@@ -362,7 +362,7 @@ while True:
       print('|[VIVIAN]|>>: [ETN] Market Might Be Closed? Doesn\'t Seem To Be Any Options To Buy Please Inform Skrypt. Instructing Program To Exit().')
       exit()
     elif Cryptopia['ETN Current Ask'][0]*1e8 > User['ETN']['Buy Maximum']:
-     print('|[VIVIAN]|>>: Waiting For ETN Price To Drop From [{}] To [{}] Satoshi Or Below. Current Order Volume [{}]'.format(Cryp1topia['ETN Current Ask'][0]*e8,User['ETN']['Buy Maximum'],Cryptopia['ETN Current Ask'][1]))
+     print('|[VIVIAN]|>>: Waiting For ETN Price To Drop From [{}] To [{}] Satoshi Or Below. Current Order Volume [{}]'.format(Cryptopia['ETN Current Ask'][0]*1e8,User['ETN']['Buy Maximum'],Cryptopia['ETN Current Ask'][1]))
      time.sleep(Cryptopia['Time Between Calls'])
    elif User['State'] == 2:
     if Cryptopia['ETN Current Bid'][0]*1e8 >= User['ETN']['Sell Minimum']:
