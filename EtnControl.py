@@ -1,235 +1,385 @@
 
 import time
 from cryptopia_api import Api
-print('''
-#################################################################################
-#                                                                               #
-#                                                                               #
-#____   ____.__      .__                                                        #
-#\   \ /   /|__|__  _|__|____    ____                                           #
-# \   Y   / |  \  \/ /  \__  \  /    \                                          #
-#  \     /  |  |\   /|  |/ __ \|   |  \                                         #
-#   \___/   |__| \_/ |__(____  /___|  /                                         #
-#                            \/     \/                                          #
-#                                       v0.3.2                                  #
-# C.T.S:                                                                        #
-# Public Cryptopia Trading System                                               #
-# Unlicenced, Public Domain                                                     # 
-#                                                                               #         
-#USE AT OWN RISK!                                                               #
-#################################################################################
-|[VIVIAN]| >>: Welcome To Vivians Central Cryptopia Monitoring System.''')
-print('|[VIVIAN]|>>: Welcome To Cryptopia ETN/BTC Trader! Written By Skrypt Please Feel Free To Donate In BTC!')
-print('|[VIVIAN]|>>: Skrypt [BTC] Donation Address: [1KwnTGnuhBQHFkxTnaYiPt7RyJYJGzDcWn]')
+
+User = dict()
+Cryptopia = dict()
 
 ####### OBJECT GUTS BELOW ######
+def vivian_banner():
+ print('''
+ #################################################################################
+ #                                                                               #
+ #                                                                               #
+ #____   ____.__      .__                                                        #
+ #\   \ /   /|__|__  _|__|____    ____                                           #
+ # \   Y   / |  \  \/ /  \__  \  /    \                                          #
+ #  \     /  |  |\   /|  |/ __ \|   |  \                                         #
+ #   \___/   |__| \_/ |__(____  /___|  /                                         #
+ #                            \/     \/                                          #
+ #                                       v0.3.2                                  #
+ # C.T.S:                                                                        #
+ # Public Cryptopia Trading System                                               #
+ # Unlicenced, Public Domain                                                     # 
+ #                                                                               #         
+ #USE AT OWN RISK!          ~ELECTRONIUM CONTROLLER~                                #
+ #################################################################################
+|[VIVIAN]| >>: Welcome To My Central Cryptopia Monitoring System.''')
+ print('|[VIVIAN]|>>: Written By Skrypt Please Feel Free To Donate In BTC!')
+ print('|[VIVIAN]|>>: Skrypt [BTC] Donation Address: [1KwnTGnuhBQHFkxTnaYiPt7RyJYJGzDcWn]')
+
+### Sets Amount Of ETN To Be Traded ###
 def set_trade_amount():
- global ETN
- global Etn_Set
- balance_etn,error = client.get_balance('ETN')
- balance_btc,error = client.get_balance('BTC')
- tick = client.get_market('ETN_BTC')
- Sell = tick[0]['AskPrice']
- print('|[CRYPTOPIA]|>>: Current ETN Balance: [{}].'.format(balance_etn['Available']))
- print('|[CRYPTOPIA]|>>: Current BTC Balance: [{}].'.format(balance_btc['Available']))
- print('|[VIVIAN]|>>: You May Trade Current BTC: [{}] For [{}] ETN At [{}] Satoshi Per ETN'.format(balance_btc['Available'],(balance_btc['Available']-balance_btc['Available']*0.00201)//Sell,Sell*1e8))
- print('|[VIVIAN]|>>: You May Trade Current ETN: [{}] For [{}] BTC At [{}] Satoshi Per ETN'.format(balance_etn['Available'],(balance_etn['Available']-balance_etn['Available']*0.00201)*Sell,Sell*1e8))
+ global User
+ global Cryptopia
+ update_user()
+ update_cryptopia()
+ print('|[CRYPTOPIA]|>>: Current ETN Balance: [{}].'.format(User['Wallets']['ETN']['Balance']))
+ print('|[CRYPTOPIA]|>>: Current BTC Balance: [{}].'.format(User['Wallets']['Bitcoin']['Balance']))
+ print('|[VIVIAN]|>>: You May Trade Current BTC: [{}] For [{}] ETN At [{}] Satoshi Per ETN Volume Available: [{}]'.format(User['Wallets']['Bitcoin']['Balance'],(User['Wallets']['Bitcoin']['Balance']-User['Wallets']['Bitcoin']['Balance']*0.00201)//Cryptopia['ETN Current Ask'][0],
+                                                                                                     Cryptopia['ETN Current Ask'][0]*1e8,Cryptopia['ETN Current Ask'][1]))
+ print('|[VIVIAN]|>>: You May Trade Current ETN: [{}] For [{}] BTC At [{}] Satoshi Per ETN Volume Available: [{}]'.format(User['Wallets']['ETN']['Balance'],(User['Wallets']['ETN']['Balance']-User['Wallets']['ETN']['Balance']*0.00201)*Cryptopia['ETN Current Bid'][0],
+                                                                                                     Cryptopia['ETN Current Bid'][0]*1e8,Cryptopia['ETN Current Bid'][1]))
  print('|[VIVIAN]|>>: How Much ETN Are You Trading? [FLOAT/#.#]')
  ETN = input('|[INPUT]|>>: ')
  try:
   squishy = '0.1'
   Test = float(ETN) + float(squishy)
   print('|[VIVIAN]|>>: ETN To Be Traded: [{}].'.format(ETN))
-  Etn_Set = True
+  User['ETN Set'] = True
+  User['ETN Trade Amount'] = float(ETN)
+  if User['Wallets']['ETN']['Balance'] < float(ETN):
+   print('|[VIVIAN]|>>: Adjusting To Buy State. {} Needed Before Sell Conversion.'.format(float(ETN) - User['Wallets']['ETN']['Balance']))
+   User['State'] = 1
+   User['ETN Left To Buy'] = float(ETN) - User['Wallets']['ETN']['Balance']
+   User['ETN Left To Sell'] = 0.0
+  elif User['Wallets']['ETN']['Balance'] >= float(ETN):
+   print('|[VIVIAN]|>>: Adjusting To Sell State. {} Original ETN Balance Before Sell Conversion.'.format(User['Wallets']['ETN']['Balance']))
+   User['State'] = 2
+   User['ETN Left To Sell'] = float(ETN)
+   User['ETN Left To Buy'] = 0.0
  except Exception as Float_Error:
   print('|[VIVIAN]|>>: You Must Enter A Float Here.')
   set_trade_amount()
-  
+
+
+### Sets Timing Between Calls To Cryptopia ###
 def set_call_timer():
- global TIMER
- global Timer_Set
+ global Cryptopia
+ global User
  print('|[VIVIAN]|>>: How Much Time (In Seconds) Between Calls? [FLOAT/#.#]')
  TIMER = input('|[INPUT]|>>: ')
  try:
   Test = float(TIMER) + 0.1
   print('|[VIVIAN]|>>: Time In Seconds Before Each Call: [{}].'.format(TIMER))
-  Timer_Set = True
+  User['Timer Set'] = True
+  Cryptopia['Time Between Calls'] = float(TIMER)
  except Exception as Float_Error:
   print('|[VIVIAN]|>>: You Must Enter A Float Here.')
   set_call_timer()
 
+
+### Sets Maximum Buy Price In Satoshi Per ETN ###
 def set_buy_max():
- global BUY_MAX
- global Buy_Max_Set
- tick = client.get_market('ETN_BTC')
- Sell = tick[0]['AskPrice'] * 1e8
- print('|[VIVIAN]|>>: Last ETN Sale Price Satoshi Per ETN [{}].'.format(Sell))
+ global User
+ global Cryptopia
+ update_cryptopia()
+ update_user()
+ print('|[VIVIAN]|>>: Last ETN Asking Price Satoshi Per ETN [{}] Volume At Value: [{}].'.format(Cryptopia['ETN Current Ask'][0]*1e8,
+                                                                                                  Cryptopia['ETN Current Ask'][1]))
  print('|[VIVIAN]|>>: How Much Max Do You Want To Spend Per ETN In Satoshi? [FLOAT/#.#]')
  BUY_MAX = input('|[INPUT]|>>: ')
  try:
   Test = float(BUY_MAX) + 0.1
   print('|[VIVIAN]|>>: Spending: [{}] Max Satoshi Per ETN.'.format(BUY_MAX))
-  Buy_Max_Set = True
+  User['ETN']['Buy Maximum'] = float(BUY_MAX)
+  User['Buy Max Set'] = True
  except Exception as Float_Error:
   print('|[VIVIAN]|>>: You Must Enter A Float Here.')
   set_buy_max()
 
+
+### Sets Minimum Sell Price In Satoshi Per ETN ###
 def set_sell_min():
- global SELL_MIN
- global Sell_Min_Set
- tick = client.get_market('ETN_BTC')
- Buy = tick[0]['BidPrice'] * 1e8
- print('|[VIVIAN]|>>: Last ETN Buy Price Satoshi Per ETN [{}].'.format(Buy))
+ global User
+ global Cryptopia
+ update_user()
+ update_cryptopia()
+ print('|[VIVIAN]|>>: Last ETN Bid Price Satoshi Per ETN [{}] Volume At Value [{}].'.format(Cryptopia['ETN Current Bid'][0]*1e8,
+                                                                                             Cryptopia['ETN Current Bid'][1]))
  print('|[VIVIAN]|>>: How Much Min Do You Want To Sell Per ETN In Satoshi? [FLOAT/#.#]')
  SELL_MIN = input('|[INPUT]|>>: ')
  try:
   Test = float(SELL_MIN) + 0.1
   print('|[VIVIAN]|>>: Selling Each ETN For [{}] Min Satoshi Per ETN.'.format(SELL_MIN))
-  Sell_Min_Set = True
+  User['ETN']['Sell Minimum'] = float(SELL_MIN)
+  User['Sell Min Set'] = True
  except Exception as Float_Error:
   print('|[VIVIAN]|>>: You Must Enter A Float Here.')
   set_sell_min()
 
+  
+### Sets Cryptopia User API Key ###
 def set_api_key():
- global API_KEY
- global Api_Key_Set
+ global User
+ global Cryptopia
  print('|[VIVIAN]|>>: Please Enter Cryptopia API Key [KEY]')
  API_KEY = input('|[INPUT]|>>: ')
  try:
   print('|[VIVIAN]|>>: Current API Key: [{}].'.format(API_KEY))
-  Api_Key_Set = True
+  Cryptopia['Api Key'] = API_KEY
+  User['Api Key Set'] = True
  except Exception as Api_Key_Error:
   print('|[VIVIAN]|>>: You Must Enter A Cryptopia API Key.')
   set_api_key()
 
+  
+### Sets Cryptopia User API Secret ###
 def set_api_secret():
- global API_SECRET
- global Api_Secret_Set
+ global Cryptopia
+ global User
  print('|[VIVIAN]|>>: Please Enter Cryptopia API Secret [SECRET]')
  API_SECRET = input('|[INPUT]|>>: ')
  try:
   print('|[VIVIAN]|>>: Current API Secret: [{}].'.format(API_SECRET))
-  Api_Secret_Set = True
+  Cryptopia['Api Secret'] = API_SECRET
+  User['Api Secret Set'] = True
  except Exception as Api_Secret_Error:
   print('|[VIVIAN]|>>: You Must Enter A Cryptopia API Secret.')
   set_api_secret()
 
-def calc_sell():
- tick = client.get_market('ETN_BTC')
- if float(tick[0]['AskPrice']) * 1e8 >= float(SELL_MIN):
-  return [True, tick[0]['AskPrice'] * 1e8]
- else:
-  return [False, tick[0]['AskPrice'] * 1e8]
-
-def calc_buy():
- tick = client.get_market('ETN_BTC')
- orders = client.get_openorders('ETN_BTC')
- if float(tick[0]['BidPrice']) * 1e8 <= float(BUY_MAX):
-  return [True, tick[0]['BidPrice'] * 1e8]
- else:
-  return [False, tick[0]['BidPrice'] * 1e8]
-
-def get_etn_balance():
- balance,error = client.get_balance('ETN')
- if balance['Available'] > 0.0:
-  return 'Sell'
- elif balance['Available'] <= 0.0:
-  return 'Buy'
-
-def sell_etn():
- tick = client.get_market('ETN_BTC')
- balance,error = client.get_balance('ETN')
- if float(balance['Available']) >= float(ETN):
-  print('Selling {} ETN For {} Satoshi Each'.format(ETN,tick[0]['BidPrice']*1e8))
-  sold = client.submit_trade('ETN/BTC', 'Sell', tick[0]['BidPrice'], ETN)
-  print(sold)
- elif float(balance['Available']) < float(ETN) and float(balance['Available']) > 0:
-  print('|[VIVIAN]|>>: Selling {} ETN For {} Satoshi Each'.format(balance['Available'],tick[0]['BidPrice']*1e8))
-  sold = client.submit_trade('ETN/BTC','Sell', tick[0]['BidPrice'], balance['Available'])
-  print(sold)
- else:
-  print('|[VIVIAN]|>>: Not Enough Balance For Trading Routine.')
-
-def buy_etn():
- tick = client.get_market('ETN_BTC')
- balance,error = client.get_balance('BTC')
- balance_etn,error = client.get_balance('ETN')
- if float(tick[0]['AskPrice'])*float(ETN) <= float(balance['Available']):
-  print('|[VIVIAN]|>>: Buying {} ETN For {} Satoshi Each'.format(ETN,tick[0]['AskPrice']*1e8))
-  bought = client.submit_trade('ETN/BTC', 'Buy', tick[0]['AskPrice'], float(ETN))
-  print(bought)
- elif float(tick[0]['AskPrice'])*(float(ETN)-float(balance_etn['Available'])) <= balance['Available']:
-  print('|[VIVIAN]|>>: Buying {} ETN For {} Satoshi Each'.format((float(ETN)-float(balance_etn['Available'])),tick[0]['AskPrice']*1e8))
-  bought = client.submit_trade('ETN/BTC', 'Buy', tick[0]['AskPrice'],float(ETN)-float(balance_etn['Available']))
-  print(bought)
- else:
-  print('|[VIVIAN]|>>: Not Enough Balance BTC For Trading Routine.')
-
-def Activate_Client():
- global client
+### Submit Trade Call (SELL) Requires Amount Arg. ###
+def sell_ETN(Amount):
+ global User
+ global Cryptopia
+ update_user()
+ update_cryptopia()
  try:
-  client = Api(API_KEY, API_SECRET)
-  print('|[VIVIAN]|>>: Cryptopia Client Activated With API Key [{}].'.format(API_KEY))
+  if Amount <= User['ETN Left To Sell']:
+   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: Selling {} ETN For {} Satoshi Each'.format(Amount,Cryptopia['ETN Current Bid'][0]*1e8))
+   sold = Cryptopia['Client'].submit_trade('ETN/BTC', 'Sell', Cryptopia['ETN Current Bid'][0], Amount)
+   if Amount == User['ETN Left To Sell']:
+    User['ETN Left To Sell'] = 0
+    User['ETN Left To Buy'] = User['ETN']['Trade Amount']
+    User['State'] = 1
+    print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: [ETN][LEFT TO SELL]: [{}] Swapping To Fresh Buy State.'.format(User['ETN Left To Sell']))
+   elif Amount < User['ETN Left To Sell']:
+    User['ETN Left To Sell'] -= Amount
+    print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: [ETN][LEFT TO SELL]: [{}] Left Before Fresh Buy State.'.format(User['ETN Left To Sell']))
+   User['Trades Completed'] += 1
+   Cryptopia['ETN Order Book'].append({'Sell': [Cryptopia['ETN Current Bid'][0], Amount]})
+   print(sold)
+  elif Amount > User['ETN Left To Sell']:
+   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: Selling {} ETN For {} Satoshi Each'.format(User['ETN Left To Sell'],Cryptopia['ETN Current Bid'][0]))
+   sold = Cryptopia['Client'].submit_trade('ETN/BTC', 'Sell', Cryptopia['ETN Current Bid'], User['ETN Left To Sell'])
+   User['ETN Left To Sell'] = 0
+   User['ETN Left To Buy'] = User['ETN']['Trade Amount']
+   User['Trades Completed'] += 1
+   User['State'] = 1
+   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: [ETN][LEFT TO SELL]: [{}] Swapping To Fresh Buy State.'.format(User['ETN Left To Sell']))
+   print(sold)
+  elif Amount <= User['ETN Left To Sell'] and Amount > User['Wallets']['ETN']['Balance'] or User['ETN Left To Sell'] > User['Wallets']['ETN']['Balance']:
+   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: There Is Not Enough ETNCoin Balance To Complete The Trade Routine Instructing Program To Exit() Please Inform Skrypt Of Loss Profit Actions')
+   exit()
+  else:
+   print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: Something Unexpected Has Happened Instructing Program To Exit.')
+   exit()
+ except Exception as Sell_ETN_Error:
+  print('|[VIVIAN]|[SELL ETN FUNCTION]|>>: There Has Been A Exception [{}] Within Our sell_ETN() Function Instructing Program To Exit Please Inform Skrypt.'.format(Sell_ETN_Error))
+  exit()
+
+### Submit Trade Call (BUY) Requires Amount Arg. ###
+def buy_ETN(Amount):
+ global User
+ global Cryptopia
+ update_user()
+ update_cryptopia()
+ try:
+  if Amount <= User['ETN Left To Buy'] and Cryptopia['ETN Current Ask'][0]*Amount <= User['Wallets']['Bitcoin']['Balance']:
+   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: Buying {} ETN For {} Satoshi Each'.format(Amount,Cryptopia['ETN Current Ask'][0]*1e8))
+   bought = Cryptopia['Client'].submit_trade('ETN/BTC', 'Buy', Cryptopia['ETN Current Ask'][0], Amount)
+   if Amount == User['ETN Left To Buy']:
+    User['ETN Left To Buy'] = 0
+    User['ETN Left To Sell'] = User['ETN']['Trade Amount']
+    User['State'] = 2
+    print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: [ETN][LEFT TO BUY]: [{}] Swapping To Fresh Sell State.'.format(User['ETN Left To Buy']))
+   elif Amount < User['ETN Left To Buy']:
+    User['ETN Left To Buy'] -= Amount
+    print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: [ETN][LEFT TO BUY]: [{}] Left Before Fresh Sell State.'.format(User['ETN Left To Buy']))
+   User['Trades Completed'] += 1
+   Cryptopia['ETN Order Book'].append({'Buy': [Cryptopia['ETN Current Ask'][0], Amount]})
+   print(bought)
+  elif Amount > User['ETN Left To Buy'] and Cryptopia['ETN Current Ask'][0]*User['ETN Left To Buy'] <= User['Wallets']['Bitcoin']['Balance']:
+   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: Buying {} ETN For {} Satoshi Each'.format(User['ETN Left To Buy'],Cryptopia['ETN Current Ask'][0]))
+   bought = Cryptopia['Client'].submit_trade('ETN/BTC', 'Buy', Cryptopia['ETN Current Ask'], User['ETN Left To Buy'])
+   User['ETN Left To Buy'] = 0
+   User['ETN Left To Sell'] = User['ETN']['Trade Amount']
+   User['Trades Completed'] += 1
+   User['State'] = 2
+   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: [ETN][LEFT TO BUY]: [{}] Swapping To Fresh Sell State.'.format(User['ETN Left To Buy']))
+   print(bought)
+  elif Amount <= User['ETN Left To Buy'] and Cryptopia['ETN Current Ask'][0]*Amount > User['Wallets']['Bitcoin']['Balance'] or Amount > User['ETN Left To Buy'] and Cryptopia['ETN Current Ask'][0]*User['ETN Left To Buy'] > User['Wallets']['Bitcoin']['Balance']:
+   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: There Is Not Enough Bitcoin Balance To Complete The Trade Routine Instructing Program To Exit() Please Inform Skrypt Of Loss Profit Actions')
+   exit()
+  else:
+   print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: Something Unexpected Has Happened Instructing Program To Exit.')
+   exit()
+ except Exception as Buy_ETN_Error:
+  print('|[VIVIAN]|[BUY ETN FUNCTION]|>>: There Has Been A Exception [{}] Within Our buy_ETN() Function Instructing Program To Exit Please Inform Skrypt.'.format(Buy_ETN_Error))
+  exit()
+
+### Activates Cryptopia['Client'] With User API Key/Secret ###
+def Activate_Client():
+ global Cryptopia
+ try:
+  Cryptopia['Client'] = Api(Cryptopia['Api Key'], Cryptopia['Api Secret'])
+  print('|[VIVIAN]|>>: Cryptopia Client Activated With API Key [{}].'.format(Cryptopia['Api Key']))
  except Exception as Client_Error:
   print('|[VIVIAN]|>>: There Was A Client Activation Error Trying Again.')
   Activate_Client()
 
-def set_globals():
- global Timer_Set
- global Api_Key_Set
- global Api_Secret_Set
- global Buy_Max_Set
- global Sell_Min_Set
- global Etn_Set
- Timer_Set = None
- Api_Key_Set = None
- Api_Secret_Set = None
- Buy_Max_Set = None
- Sell_Min_Set = None
- Etn_Set = None
- print('|[VIVIAN]|>>: All Global Controls Reset To [NONE]')
+  
+### Updates User Information Via Cryptopia API ###
+def update_user():
+ global User
+ global Cryptopia
+ balance,error = Cryptopia['Client'].get_balance('ETN')
+ if error == None:
+  User['Wallets']['ETN']['Balance'] = float(balance['Available'])
+ elif error != None:
+  print('We Have Had An Update_User().balance Error, Please Contact Skrypt With: [{}].'.format(error))
+ balance,error = Cryptopia['Client'].get_balance('BTC')
+ if error == None:
+  User['Wallets']['Bitcoin']['Balance'] = float(balance['Available'])
+ elif error != None:
+  print('We Have Had An Update_User().balance Error, Please Contact Skrypt With: [{}].'.format(error))
+ open_ETN_orders,error = Cryptopia['Client'].get_openorders('ETN_BTC')
+ if open_ETN_orders == [] and error == None:
+  User['Wallets']['ETN']['Open Orders'] = [None]
+ elif open_ETN_orders != [] and error == None:
+  User['Wallets']['ETN']['Open Orders'] = []
+  User['Wallets']['ETN']['Open Orders'].append(open_ETN_orders)
+ elif error != None:
+  print('We Have Had An Update_User().open_ETN_orders Error, Please Contact Skrypt With: [{}].'.format(error))
+ else:
+  print('Something Unexpected Has Happened Within Update_User() Function, Please Contact Skrypt. Instructing Program To Execute Exit().')
+  exit()
+ print('User Updated')
 
-print('|[VIVIAN]|>>: Setting Global Controls Now.')
-set_globals()
+  
+### Sets Up User Database Object To Store Returned Data ###
+def set_user():
+ global User
+ User = dict()
+ User['Trades Completed'] = 0
+ User['ETN'] = dict()
+ User['ETN']['Buy Maximum'] = 0.0
+ User['ETN']['Sell Minimum'] = 0.0
+ User['ETN']['Trade Amount'] = 0.0
+ User['Wallets'] = dict()
+ User['Wallets']['ETN'] = dict()
+ User['Wallets']['ETN']['Balance'] = 0.0
+ User['Wallets']['ETN']['Open Orders'] = list()
+ User['Wallets']['ETN']['Completed Orders List'] = list()
+ User['Wallets']['Bitcoin'] = dict()
+ User['Wallets']['Bitcoin']['Balance'] = 0.0
+ User['Wallets']['Bitcoin']['Open Orders'] = list()
+ User['Wallets']['Bitcoin']['Completed Orders List'] = list()
+ User['ETN Left To Sell'] = 0.0
+ User['ETN Left To Buy'] = 0.0
+ User['State'] = 0
+ User['Timer Set'] = None
+ User['Api Key Set'] = None
+ User['Api Secret Set'] = None
+ User['Buy Max Set'] = None
+ User['Sell Min Set'] = None
+ User['ETN Set'] = None
+ print('|[VIVIAN]|>>: User Created')
+
+ 
+### Sets Up Cryptopia Database Object To Store Returned Data ###
+def set_cryptopia():
+ global Cryptopia
+ Cryptopia = dict()
+ Cryptopia['Time Between Calls'] = 0.0
+ Cryptopia['Total Calls'] = 0
+ Cryptopia['Api Key'] = ''
+ Cryptopia['Api Secret'] = ''
+ Cryptopia['Client'] = None
+ Cryptopia['ETN Current Bid'] = [0.0, 0.0]
+ Cryptopia['ETN Current Ask'] = [0.0, 0.0]
+ Cryptopia['ETN Order Book'] = list()
+
+ 
+### Updates Cryptopia Database Object Via Cryptopia API ###
+def update_cryptopia():
+ global Cryptopia
+ orders,error = Cryptopia['Client'].get_orders('ETN_BTC')
+ Cryptopia['ETN Current Bid'][0] = orders['Buy'][0]['Price']
+ Cryptopia['ETN Current Ask'][0] = orders['Sell'][0]['Price']
+ Cryptopia['ETN Current Bid'][1] = orders['Buy'][0]['Volume']
+ Cryptopia['ETN Current Ask'][1] = orders['Sell'][0]['Volume']
+ Cryptopia['Total Calls'] += 1
+ print('Cryptopia Updated')
+
+
+##### Quik Control Switches #####
+Vivian = False
+set_user()
+set_cryptopia()
+if Vivian == False:
+ vivian_banner()
+ Vivian = True
+
+
+### Trading Routine ###
+print('|[VIVIAN]|>>: Please Answer A Few Short Questions To Set User Controls.')
 while True:
- if Timer_Set == None or Timer_Set == False:
+ if User['Timer Set'] == None or User['Timer Set'] == False:
   set_call_timer()
- if Api_Key_Set == None or Api_Key_Set == False:
+ if User['Api Key Set'] == None or User['Api Key Set'] == False:
   set_api_key()
- if Api_Secret_Set == None or Api_Key_Set == False:
+ if User['Api Secret Set'] == None or User['Api Secret Set'] == False:
   set_api_secret()
   Activate_Client()
- if Etn_Set == None or Etn_Set == False:
+ if User['ETN Set'] == None or User['ETN Set'] == False:
   set_trade_amount()
- if Buy_Max_Set == None or Buy_Max_Set == False:
+ if User['Buy Max Set'] == None or User['Buy Max Set'] == False:
   set_buy_max()
- if Sell_Min_Set == None or Sell_Min_Set == False:
+ if User['Sell Min Set'] == None or User['Sell Min Set'] == False:
   set_sell_min()
  else:
   try:
-   trade = get_etn_balance()
-   if trade == 'Sell':
-    should_sell = calc_sell()
-    if should_sell[0] == True:
-     print('|[SELL]|>>: Selling ETN At {} Satoshi'.format(should_sell[1]))
-     transaction = sell_etn()
-     time.sleep(float(TIMER))
-    else:
-     print('|[SELL]|>>: Waiting For Price Flux')
-     time.sleep(float(TIMER))
-   elif trade == 'Buy':
-    should_buy = calc_buy()
-    if should_buy[0] == True:
-     print('|[BUY]|>>: Buying ETN At {} Satoshi'.format(should_buy[1]))
-     transaction = buy_etn()
-     time.sleep(float(TIMER))
-    else:
-     print('|[BUY]|>>: Waiting For Price Flux')
-     time.sleep(float(TIMER))
+   update_user()
+   update_cryptopia()
+   if User['State'] == 1:
+    if Cryptopia['ETN Current Ask'][0]*1e8 <= User['ETN']['Buy Maximum']:
+     if Cryptopia['ETN Current Ask'][1] >= User['ETN Left To Buy']:
+      buy_ETN(User['ETN Left To Buy'])
+     elif Cryptopia['ETN Current Ask'][1] < User['ETN Left To Buy']:
+      buy_ETN(Cryptopia['ETN Current Ask'][1])
+     else:
+      print('|[VIVIAN]|>>: [ETN] Market Might Be Closed? Doesn\'t Seem To Be Any Options To Buy Please Inform Skrypt. Instructing Program To Exit().')
+      exit()
+    elif Cryptopia['ETN Current Ask'][0]*1e8 > User['ETN']['Buy Maximum']:
+     print('|[VIVIAN]|>>: Waiting For ETN Price To Drop From [{}] To [{}] Satoshi Or Below. Current Order Volume [{}]'.format(Cryp1topia['ETN Current Ask'][0]*e8,User['ETN']['Buy Maximum'],Cryptopia['ETN Current Ask'][1]))
+     time.sleep(Cryptopia['Time Between Calls'])
+   elif User['State'] == 2:
+    if Cryptopia['ETN Current Bid'][0]*1e8 >= User['ETN']['Sell Minimum']:
+     if Cryptopia['ETN Current Bid'][1] >= User['ETN Left To Sell']:
+      sell_ETN(User['ETN Left To Sell'])
+     elif Cryptopia['ETN Current Bid'][1] < User['ETN Left To Sell']:
+      sell_ETN(Cryptopia['ETN Current Bid'][1])
+     else:
+      print('|[VIVIAN]|>>: [ETN] Market Might Be Closed? Doesn\'t Seem To Be Any Options To Buy Please Inform Skrypt. Instructing Program To Exit().')
+      exit()
+    elif Cryptopia['ETN Current Bid'][0]*1e8 < User['ETN']['Sell Minimum']:
+     print('|[VIVIAN]|>>: Waiting For ETN Price To Raise From [{}] To [{}] Satoshi Or Higher. Current Order Volume [{}]'.format(Cryptopia['ETN Current Bid'][0]*1e8,User['ETN']['Sell Minimum'],Cryptopia['ETN Current Bid'][1]))
+     time.sleep(Cryptopia['Time Between Calls'])
    else:
-    print('|[VIVIAN]|>>: Something Has Fucked Up, Waiting Timer Then Trying Again')
-    time.sleep(float(TIMER))
+    print('|[VIVIAN]|>>: Something Has Fucked Up With User[\'State\'], Waiting Timer Then Trying Again')
+    time.sleep(float(Cryptopia['Time Between Calls']))
   except Exception as Run_Time_Error:
    print('|[VIVIAN]|>>: We Have Had The Following Run Time Error: [{}]'.format(Run_Time_Error))
    print('|[VIVIAN]|>>: Going To Instruct Program To Exit Contact Skrypt With Plenty Of Information Including [{}].'.format(Run_Time_Error))
-
+   exit()
