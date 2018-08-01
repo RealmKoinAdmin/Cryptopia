@@ -25,8 +25,8 @@ def vivian_banner():
  #USE AT OWN RISK!          ~ELECTRONIUM CONTROLLER~                                #
  #################################################################################
 |[VIVIAN]| >>: Welcome To My Central Cryptopia Monitoring System.''')
- print('|[VIVIAN]|>>: Written By Skrypt Please Feel Free To Donate In BTC!')
- print('|[VIVIAN]|>>: Skrypt [BTC] Donation Address: [1KwnTGnuhBQHFkxTnaYiPt7RyJYJGzDcWn]')
+ print('|[VIVIAN]|>>: Written By Skrypt Please Feel Free To Donate In To The RealmKoin Project!')
+ print('|[VIVIAN]|>>: (RK) [ETH/Tokens] Donation Address: [0xdb436485f38d0f9c78acfb20ededc97419eb2ea5]')
 
 ### Sets Amount Of ETN To Be Traded ###
 def set_trade_amount():
