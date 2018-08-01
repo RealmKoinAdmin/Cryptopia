@@ -36,8 +36,10 @@ def set_trade_amount():
  update_cryptopia()
  print('|[CRYPTOPIA]|>>: Current DOGE Balance: [{}].'.format(User['Wallets']['Doge']['Balance']))
  print('|[CRYPTOPIA]|>>: Current BTC Balance: [{}].'.format(User['Wallets']['Bitcoin']['Balance']))
- print('|[VIVIAN]|>>: You May Trade Current BTC: [{}] For [{}] DOGE At [{}] Satoshi Per DOGE'.format(User['Wallets']['Bitcoin']['Balance'],(User['Wallets']['Bitcoin']['Balance']-User['Wallets']['Bitcoin']['Balance']*0.00201)//Cryptopia['Doge Current Bid'][0],Cryptopia['Doge Current Bid'][0]*1e8))
- print('|[VIVIAN]|>>: You May Trade Current DOGE: [{}] For [{}] BTC At [{}] Satoshi Per DOGE'.format(User['Wallets']['Doge']['Balance'],(User['Wallets']['Doge']['Balance']-User['Wallets']['Doge']['Balance']*0.00201)*Cryptopia['Doge Current Ask'][0],Cryptopia['Doge Current Ask'][0]*1e8))
+ print('|[VIVIAN]|>>: You May Trade Current BTC: [{}] For [{}] DOGE At [{}] Satoshi Per DOGE Volume Available: [{}]'.format(User['Wallets']['Bitcoin']['Balance'],(User['Wallets']['Bitcoin']['Balance']-User['Wallets']['Bitcoin']['Balance']*0.00201)//Cryptopia['Doge Current Ask'][0],
+                                                                                                     Cryptopia['Doge Current Ask'][0]*1e8,Cryptopia['Doge Current Ask'][1]))
+ print('|[VIVIAN]|>>: You May Trade Current DOGE: [{}] For [{}] BTC At [{}] Satoshi Per DOGE Volume Available: [{}]'.format(User['Wallets']['Doge']['Balance'],(User['Wallets']['Doge']['Balance']-User['Wallets']['Doge']['Balance']*0.00201)*Cryptopia['Doge Current Bid'][0],
+                                                                                                     Cryptopia['Doge Current Bid'][0]*1e8,Cryptopia['Doge Current Bid'][1]))
  print('|[VIVIAN]|>>: How Much DOGE Are You Trading? [FLOAT/#.#]')
  DOGE = input('|[INPUT]|>>: ')
  try:
@@ -83,7 +85,8 @@ def set_buy_max():
  global Cryptopia
  update_cryptopia()
  update_user()
- print('|[VIVIAN]|>>: Last DOGE Sale Price Satoshi Per DOGE [{}].'.format(Cryptopia['Doge Current Ask'][0]*1e8))
+ print('|[VIVIAN]|>>: Last DOGE Asking Price Satoshi Per DOGE [{}] Volume At Value: [{}].'.format(Cryptopia['Doge Current Ask'][0]*1e8,
+                                                                                                  Cryptopia['Doge Current Ask'][1]))
  print('|[VIVIAN]|>>: How Much Max Do You Want To Spend Per DOGE In Satoshi? [FLOAT/#.#]')
  BUY_MAX = input('|[INPUT]|>>: ')
  try:
@@ -102,7 +105,8 @@ def set_sell_min():
  global Cryptopia
  update_user()
  update_cryptopia()
- print('|[VIVIAN]|>>: Last DOGE Buy Price Satoshi Per DOGE [{}].'.format(Cryptopia['Doge Current Bid'][0]*1e8))
+ print('|[VIVIAN]|>>: Last DOGE Bid Price Satoshi Per DOGE [{}] Volume At Value [{}].'.format(Cryptopia['Doge Current Bid'][0]*1e8,
+                                                                                             Cryptopia['Doge Current Bid'][1]))
  print('|[VIVIAN]|>>: How Much Min Do You Want To Sell Per DOGE In Satoshi? [FLOAT/#.#]')
  SELL_MIN = input('|[INPUT]|>>: ')
  try:
@@ -352,13 +356,13 @@ while True:
     if Cryptopia['Doge Current Ask'][0]*1e8 <= User['Doge']['Buy Maximum']:
      if Cryptopia['Doge Current Ask'][1] >= User['Doge Left To Buy']:
       buy_doge(User['Doge Left To Buy'])
-     elif Cryptopia['Doge Current Bid'][1] < User['Doge Left To Buy']:
-      buy_doge(Cryptopia['Doge Current Bid'][1])
+     elif Cryptopia['Doge Current Ask'][1] < User['Doge Left To Buy']:
+      buy_doge(Cryptopia['Doge Current Ask'][1])
      else:
       print('|[VIVIAN]|>>: [DOGE] Market Might Be Closed? Doesn\'t Seem To Be Any Options To Buy Please Inform Skrypt. Instructing Program To Exit().')
       exit()
     elif Cryptopia['Doge Current Ask'][0]*1e8 > User['Doge']['Buy Maximum']:
-     print('|[VIVIAN]|>>: Waiting For Doge Price To Drop From [{}] To [{}] Satoshi Or Below. Current Order Volume [{}]'.format(Cryptopia['Doge Current Ask'][0]*1e8,User['Doge']['Buy Maximum'],Cryptopia['Doge Current Ask'][1]))
+     print('|[VIVIAN]|>>: Waiting For Doge Price To Drop From [{}] To [{}] Satoshi Or Below. Current Order Volume [{}]'.format(Cryp1topia['Doge Current Ask'][0]*e8,User['Doge']['Buy Maximum'],Cryptopia['Doge Current Ask'][1]))
      time.sleep(Cryptopia['Time Between Calls'])
    elif User['State'] == 2:
     if Cryptopia['Doge Current Bid'][0]*1e8 >= User['Doge']['Sell Minimum']:
