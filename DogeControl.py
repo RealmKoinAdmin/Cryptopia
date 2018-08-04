@@ -380,7 +380,11 @@ while True:
     print('|[VIVIAN]|>>: Something Has Fucked Up With User[\'State\'], Waiting Timer Then Trying Again')
     time.sleep(float(Cryptopia['Time Between Calls']))
   except Exception as Run_Time_Error:
-   print('|[VIVIAN]|>>: We Have Had The Following Run Time Error: [{}]'.format(Run_Time_Error))
-   print('|[VIVIAN]|>>: Going To Instruct Program To Exit Contact Skrypt With Plenty Of Information Including [{}].'.format(Run_Time_Error))
-   exit()
+   if 'Connection Aborted' in Run_Time_Error:
+    print('Resetting Client Due To Connection Failure')
+    Activate_Client()
+   else:
+    print('|[VIVIAN]|>>: We Have Had The Following Run Time Error: [{}]'.format(Run_Time_Error))
+    print('|[VIVIAN]|>>: Going To Instruct Program To Exit Contact Skrypt With Plenty Of Information Including [{}].'.format(Run_Time_Error))
+    exit()
 
