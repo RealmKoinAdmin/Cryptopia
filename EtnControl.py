@@ -48,13 +48,25 @@ def set_trade_amount():
   print('|[VIVIAN]|>>: ETN To Be Traded: [{}].'.format(ETN))
   User['ETN Set'] = True
   User['ETN Trade Amount'] = float(ETN)
-  if User['Wallets']['ETN']['Balance'] < float(ETN):
+  print('|[VIVIAN]|>>: Would You Like To Start With Buy Or Sell? Please Type Buy/Sell')
+  Choice = input('>>: ')
+  if User['Wallets']['ETN']['Balance'] < float(ETN) and Choice.lower() == 'buy':
    print('|[VIVIAN]|>>: Adjusting To Buy State. {} Needed Before Sell Conversion.'.format(float(ETN) - User['Wallets']['ETN']['Balance']))
    User['State'] = 1
    User['ETN Left To Buy'] = float(ETN) - User['Wallets']['ETN']['Balance']
    User['ETN Left To Sell'] = 0.0
-  elif User['Wallets']['ETN']['Balance'] >= float(ETN):
-   print('|[VIVIAN]|>>: Adjusting To Sell State. {} Original ETN Balance Before Sell Conversion.'.format(User['Wallets']['ETN']['Balance']))
+  elif User['Wallets']['ETN']['Balance'] >= float(ETN) and Choice.lower() == 'buy':
+   print('|[VIVIAN]|>>: Adjusting To New Buy State. {} Original ETN Balance Before Sell Conversion.'.format(User['Wallets']['ETN']['Balance']))
+   User['State'] = 1
+   User['ETN Left To Sell'] = 0.0
+   User['ETN Left To Buy'] = float(ETN)
+  if User['Wallets']['ETN']['Balance'] < float(ETN) and Choice.lower() == 'sell':
+   print('|[VIVIAN]|>>: Adjusting To Sell State. {} Needed To Be Sold Before Buy Conversion.'.format(User['Wallets']['ETN']['Balance'])
+   User['State'] = 2
+   User['ETN Left To Buy'] = 0.0
+   User['ETN Left To Sell'] = User['Wallets']['ETN']['Balance']
+  elif User['Wallets']['ETN']['Balance'] >= float(ETN) and Choice.lower() == 'sell':
+   print('|[VIVIAN]|>>: Adjusting To New Buy State. {} Original ETN Balance Before Sell Conversion.'.format(User['Wallets']['ETN']['Balance']))
    User['State'] = 2
    User['ETN Left To Sell'] = float(ETN)
    User['ETN Left To Buy'] = 0.0
